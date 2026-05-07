@@ -1,0 +1,76 @@
+{
+  "name": "code-rebuilder",
+  "version": "0.1.0",
+  "description": "CodeRebuilder — Vue to React/Vue3 refactor assistant (Electron)",
+  "main": "out/main/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build && electron-builder",
+    "build:vite": "electron-vite build",
+    "preview": "electron-vite preview",
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.5.2",
+    "@monaco-editor/react": "^4.6.0",
+    "@vue/compiler-sfc": "^3.5.13",
+    "antd": "^5.22.6",
+    "better-sqlite3": "^12.9.0",
+    "execa": "^9.5.2",
+    "monaco-editor": "^0.52.2",
+    "openai": "^4.77.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "simple-git": "^3.27.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^6.0.1",
+    "electron": "33.4.11",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.1",
+    "vite": "^8.0.11",
+    "vite-plugin-monaco-editor": "^1.1.0",
+    "vitest": "^4.1.5"
+  },
+  "build": {
+    "appId": "com.coderebuilder.app",
+    "productName": "CodeRebuilder",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}
