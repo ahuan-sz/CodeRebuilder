@@ -1,0 +1,68 @@
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+
+# Dependency directories
+node_modules/
+.pnpm-store/
+
+# Build / cache outputs
+dist/
+build/
+out/
+coverage/
+.cache/
+.tmp/
+tmp/
+temp/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Java / Kotlin / Gradle
+.gradle/
+*.class
+
+# Go
+bin/
+
+# Rust
+target/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
