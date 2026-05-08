@@ -19,10 +19,10 @@ const DEFAULT_ASSISTANT: NonNullable<AppConfig['refactorAssistant']> = {
 
 const DEFAULT_CONFIG: AppConfig = {
   ai: {
-    provider: 'mock',
+    provider: 'openai',
     model: 'gpt-4o-mini',
     targetExt: 'tsx',
-    openaiBaseUrl: undefined,
+    openaiBaseUrl: 'https://api.openai.com/v1',
   },
   refactorAssistant: { ...DEFAULT_ASSISTANT, mechanicalDraft: { ...DEFAULT_MECHANICAL } },
 };

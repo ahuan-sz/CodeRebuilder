@@ -22,6 +22,9 @@ const api = {
   openProject: (): Promise<IPCResponse<ProjectImportResult>> =>
     ipcRenderer.invoke('project:open-folder'),
 
+  getLastProject: (): Promise<IPCResponse<ProjectImportResult | null>> =>
+    ipcRenderer.invoke('project:get-last'),
+
   scanVueFiles: (req: ReqScanVueFiles): Promise<IPCResponse<ResScanVueFiles>> =>
     ipcRenderer.invoke('refactor:scan-vue-files', req),
 

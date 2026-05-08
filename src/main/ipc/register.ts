@@ -1,4 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron';
+import { existsSync } from 'node:fs';
 import type { IpcMainInvokeEvent } from 'electron';
 import { handleScanVueFiles } from './refactor/scan-vue-files.js';
 import { handleStartFile } from './refactor/start-file.js';
@@ -7,7 +8,9 @@ import { handleConfirmVersion } from './refactor/confirm-version.js';
 import { handleListVersions } from './refactor/list-versions.js';
 import { handleOpenProject } from './project/open-project.js';
 import { loadConfig, saveConfig, loadOpenAiKey, saveOpenAiKey, clearStoredOpenAiKey } from '../services/config-manager.js';
-import type { AppConfig } from '../../shared/ipc-types.js';
+import { getProjectById } from '../services/project-store.js';
+import { isVueProject } from '../services/refactor/vue-file-scanner.js';
+import type { AppConfig, ProjectImportResult } from '../../shared/ipc-types.js';
 
 export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void {
   ipcMain.handle('project:open-folder', async (event: IpcMainInvokeEvent) => {
@@ -33,8 +36,28 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   });
 
   ipcMain.handle('config:set', async (_e, cfg: AppConfig) => {
-    saveConfig(cfg);
+    const existing = loadConfig();
+    saveConfig({ ...cfg, lastOpenedProject: existing.lastOpenedProject });
     return { success: true, data: loadConfig() };
+  });
+
+  ipcMain.handle('project:get-last', async () => {
+    const cfg = loadConfig();
+    const last = cfg.lastOpenedProject;
+    if (!last) return { success: true, data: null };
+
+    const row = getProjectById(last.projectId);
+    if (!row || !existsSync(row.root_path)) {
+      return { success: true, data: null };
+    }
+
+    const result: ProjectImportResult = {
+      projectId: row.id,
+      projectRoot: row.root_path,
+      name: row.display_name ?? row.root_path.split(/[/\\]/).pop() ?? 'project',
+      isVueProject: isVueProject(row.root_path),
+    };
+    return { success: true, data: result };
   });
 
   ipcMain.handle('config:set-openai-key', async (_e, key: string) => {

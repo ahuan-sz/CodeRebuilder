@@ -49,15 +49,34 @@ export type RefactorAssistantConfig = {
   mechanicalDraft?: MechanicalDraftConfig;
 };
 
+export type MigrationPath = 'vue2_to_vue3' | 'vue2_to_react' | 'vue3_to_react';
+
+export type RefactorPlan = {
+  migrationPath: MigrationPath;
+  useTypeScript: boolean;
+  /** vue→vue3: 'pinia'|'vuex'；vue→react / vue3→react: 'zustand'|'redux-toolkit' */
+  stateManagement: string;
+  /** vue→vue3: 'less'|'sass'|'css'；vue→react: 'css-modules'|'tailwind'|'unocss' */
+  styleSolution: string;
+};
+
 /** Persisted app settings (shared with renderer). */
 export type AppConfig = {
   ai: {
-    provider: 'openai' | 'anthropic' | 'deepseek' | 'mock';
+    provider: 'openai' | 'anthropic' | 'deepseek' | 'mock' | 'zhipuai' | 'github_models' | 'hunyuan';
     model: string;
     targetExt: 'tsx' | 'jsx';
     openaiBaseUrl?: string;
   };
   refactorAssistant?: RefactorAssistantConfig;
+  /** 当前重构方案，选择方案界面设置后持久化 */
+  refactorPlan?: RefactorPlan;
+  /** 上次打开的项目，供重启后自动恢复 */
+  lastOpenedProject?: {
+    projectId: string;
+    projectRoot: string;
+    name: string;
+  };
 };
 
 export type RefactorFileStatus =

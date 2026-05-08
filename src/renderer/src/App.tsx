@@ -1,4 +1,4 @@
-import { SettingOutlined } from '@ant-design/icons';
+import { SettingOutlined, SwapOutlined } from '@ant-design/icons';
 import {
   Alert,
   Button,
@@ -13,14 +13,16 @@ import {
   Space,
   Spin,
   Switch,
+  Tag,
   Typography,
   message,
 } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefactorTree } from './components/project-tree/refactor-tree';
 import { RefactorWorkbench } from './pages/refactor-workbench';
+import { PlanSelector } from './components/plan-selector/plan-selector';
 import { subscribeRefactorIpc, useRefactorStore } from './stores/refactor-store';
-import type { AppConfig } from '../../shared/ipc-types';
+import type { AppConfig, RefactorPlan } from '../../shared/ipc-types';
 import {
   AI_PROVIDER_PRESETS,
   mergeModelOptionForSelect,
@@ -37,7 +39,14 @@ type SettingsValues = AppConfig & { apiKeyInput?: string };
 
 export default function App(): JSX.Element {
   const openProject = useRefactorStore((s) => s.openProject);
+  const restoreLastProject = useRefactorStore((s) => s.restoreLastProject);
+  const setPlan = useRefactorStore((s) => s.setPlan);
+  const plan = useRefactorStore((s) => s.plan);
   const scanLoading = useRefactorStore((s) => s.scanLoading);
+
+  const [showPlanSelector, setShowPlanSelector] = useState(false);
+  /** 'initial'：首次启动未选方案；'workbench'：从重构界面主动切换 */
+  const [planSelectorSource, setPlanSelectorSource] = useState<'initial' | 'workbench'>('initial');
   const tree = useRefactorStore((s) => s.tree);
   const selectedPath = useRefactorStore((s) => s.selectedPath);
   const selectFile = useRefactorStore((s) => s.selectFile);
@@ -84,9 +93,24 @@ export default function App(): JSX.Element {
       if (!api) return;
       const k = await api.keyStatus();
       if (k.success) setHasKey(k.data.hasKey);
+      // 读取持久化的方案
+      const cfgRes = await api.getConfig();
+      if (cfgRes.success && cfgRes.data.refactorPlan) {
+        useRefactorStore.setState({ plan: cfgRes.data.refactorPlan });
+      } else {
+        // 未选方案，展示初次启动选择界面
+        setPlanSelectorSource('initial');
+        setShowPlanSelector(true);
+      }
+      await restoreLastProject();
     })();
     return unsub;
-  }, []);
+  }, [restoreLastProject]);
+
+  const handlePlanConfirm = useCallback(async (newPlan: RefactorPlan): Promise<void> => {
+    await setPlan(newPlan);
+    setShowPlanSelector(false);
+  }, [setPlan]);
 
   const refreshSettingsBootstrap = useCallback(async (): Promise<boolean> => {
     if (!window.crApi) return false;
@@ -163,6 +187,12 @@ export default function App(): JSX.Element {
     void message.success('设置已保存');
   };
 
+  const planLabel: Record<string, string> = {
+    vue2_to_vue3: 'Vue 2 → Vue 3',
+    vue2_to_react: 'Vue 2 → React',
+    vue3_to_react: 'Vue 3 → React',
+  };
+
   return (
     <Layout style={{ height: '100%', overflow: 'hidden', flexDirection: 'column' }}>
       {typeof window !== 'undefined' && window.__CR_BROWSER_STUB__ ? (
@@ -190,43 +220,53 @@ export default function App(): JSX.Element {
           CodeRebuilder
         </Title>
         <Space>
-          <Button type="primary" ghost onClick={() => void openProject()} loading={scanLoading}>
-            打开项目
-          </Button>
+          {/* 重构界面：显示当前方案标记（可点击切换） */}
+          {plan && !showPlanSelector && (
+            <Button
+              type="text"
+              size="small"
+              icon={<SwapOutlined />}
+              style={{ color: 'rgba(255,255,255,0.65)', paddingInline: 4 }}
+              onClick={() => { setPlanSelectorSource('workbench'); setShowPlanSelector(true); }}
+            >
+              <Tag color="blue" style={{ marginLeft: 4 }}>
+                {planLabel[plan.migrationPath] ?? plan.migrationPath}
+              </Tag>
+            </Button>
+          )}
+          {/* 从重构界面跳入方案选择：提供返回按钮，避免用户迷失 */}
+          {showPlanSelector && planSelectorSource === 'workbench' && (
+            <Button
+              type="primary"
+              ghost
+              onClick={() => setShowPlanSelector(false)}
+            >
+              ← 返回重构界面
+            </Button>
+          )}
+          {plan && !showPlanSelector && (
+            <Button type="primary" ghost onClick={() => void openProject()} loading={scanLoading}>
+              打开项目
+            </Button>
+          )}
           <Button type="primary" ghost icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)}>
             设置
           </Button>
         </Space>
       </Header>
 
-      <Layout
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <Sider
-          theme="dark"
-          width={300}
-          style={{
-            flexShrink: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: 12 }}>
-            <RefactorTree
-              tree={tree}
-              selectedPath={selectedPath}
-              onSelectPath={(p) => selectFile(p)}
-            />
-          </div>
-        </Sider>
+      <Layout style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {!showPlanSelector && (
+          <Sider theme="dark" width={300} style={{ overflow: 'hidden' }}>
+            <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: 12, boxSizing: 'border-box' }}>
+              <RefactorTree
+                tree={tree}
+                selectedPath={selectedPath}
+                onSelectPath={(p) => selectFile(p)}
+              />
+            </div>
+          </Sider>
+        )}
 
         <Content
           style={{
@@ -238,17 +278,24 @@ export default function App(): JSX.Element {
             overflow: 'hidden',
           }}
         >
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              padding: 24,
-            }}
-          >
-            <RefactorWorkbench />
-          </div>
+          {showPlanSelector ? (
+            <PlanSelector
+              initialPlan={plan ?? undefined}
+              onConfirm={(p) => void handlePlanConfirm(p)}
+            />
+          ) : (
+            <div
+              style={{
+                flex: 1,
+                minHeight: 0,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                padding: 24,
+              }}
+            >
+              <RefactorWorkbench />
+            </div>
+          )}
         </Content>
       </Layout>
 
@@ -282,16 +329,34 @@ export default function App(): JSX.Element {
             <Form.Item label="提供商" name={['ai', 'provider']}>
               <Select
                 options={[
-                  { value: 'mock', label: 'Mock（离线占位，不调 API）' },
-                  { value: 'openai', label: 'OpenAI' },
-                  { value: 'deepseek', label: 'DeepSeek（OpenAI 兼容）' },
-                  { value: 'anthropic', label: 'Anthropic（暂未接入）' },
+                  {
+                    label: '免费平台',
+                    options: [
+                      { value: 'zhipuai', label: '🆓 智谱AI · GLM-4-Flash（推荐·30B·200K 上下文）' },
+                      { value: 'github_models', label: '🆓 GitHub Models · GPT-4o / DeepSeek-R1' },
+                      { value: 'hunyuan', label: '🆓 腾讯混元 · hunyuan-lite（1M 上下文）' },
+                    ],
+                  },
+                  {
+                    label: '付费平台',
+                    options: [
+                      { value: 'openai', label: 'OpenAI' },
+                      { value: 'deepseek', label: 'DeepSeek（OpenAI 兼容）' },
+                      { value: 'anthropic', label: 'Anthropic（暂未接入）' },
+                    ],
+                  },
+                  {
+                    label: '其他',
+                    options: [
+                      { value: 'mock', label: 'Mock（离线占位，不调 API）' },
+                    ],
+                  },
                 ]}
                 onChange={(p) => applyAiProviderPreset(p)}
               />
             </Form.Item>
             <Typography.Paragraph type="secondary" style={{ marginTop: -8 }}>
-              切换提供商时会自动填入该厂商常见的公开 Base URL，并选用推荐模型（可在下方下拉中更换）。
+              切换提供商时会自动填入 Base URL 与推荐模型。免费平台注册后即可获取 API Key，无需付费。
             </Typography.Paragraph>
             <Form.Item
               label="模型"

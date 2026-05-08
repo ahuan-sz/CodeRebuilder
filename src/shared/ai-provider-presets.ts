@@ -57,6 +57,34 @@ export const AI_PROVIDER_PRESETS: Record<AiProviderId, AiProviderPreset> = {
       { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
     ],
   },
+  zhipuai: {
+    defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    defaultModel: 'glm-4-flash',
+    modelOptions: [
+      { value: 'glm-4-flash', label: 'GLM-4-Flash（免费·30B·200K 上下文）' },
+      { value: 'glm-4-plus', label: 'GLM-4-Plus（付费）' },
+      { value: 'glm-4', label: 'GLM-4（付费）' },
+    ],
+  },
+  github_models: {
+    defaultBaseUrl: 'https://models.inference.ai.azure.com',
+    defaultModel: 'gpt-4o-mini',
+    modelOptions: [
+      { value: 'gpt-4o-mini', label: 'GPT-4o mini（免费）' },
+      { value: 'gpt-4o', label: 'GPT-4o（免费·有速率限制）' },
+      { value: 'DeepSeek-R1', label: 'DeepSeek-R1（免费）' },
+      { value: 'DeepSeek-V3-0324', label: 'DeepSeek-V3（免费）' },
+    ],
+  },
+  hunyuan: {
+    defaultBaseUrl: 'https://api.hunyuan.cloud.tencent.com/v1',
+    defaultModel: 'hunyuan-lite',
+    modelOptions: [
+      { value: 'hunyuan-lite', label: 'hunyuan-lite（免费·1M 上下文）' },
+      { value: 'hunyuan-turbo', label: 'hunyuan-turbo（付费）' },
+      { value: 'hunyuan-pro', label: 'hunyuan-pro（付费）' },
+    ],
+  },
 };
 
 /** 回填配置文件中「不在当前列表」的模型时仍可展示该项 */

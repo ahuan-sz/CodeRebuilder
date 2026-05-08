@@ -4,6 +4,7 @@ import { pushDebugLog } from '../components/debug/debug-panel';
 import type {
   FileStatusUpdatedPayload,
   ProjectImportResult,
+  RefactorPlan,
   ResScanVueFiles,
   TaskProgressPayload,
   TreeNode,
@@ -16,6 +17,7 @@ type TaskProgressEntry = { phase: string; message?: string };
 
 type RefactorStore = {
   project: ProjectState;
+  plan: RefactorPlan | null;
   tree: TreeNode[];
   totalVueFiles: number;
   selectedPath: string | null;
@@ -26,6 +28,8 @@ type RefactorStore = {
   /** 工作台收到选中文件的刷新信号（状态/Diff） */
   workbenchRefreshSeq: number;
   openProject: () => Promise<void>;
+  restoreLastProject: () => Promise<void>;
+  setPlan: (plan: RefactorPlan) => Promise<void>;
   scan: () => Promise<void>;
   selectFile: (path: string | null) => void;
   patchTreeStatus: (path: string, status: RefactorFileStatus, checked?: boolean) => void;
@@ -58,6 +62,7 @@ function patchNode(
 
 export const useRefactorStore = create<RefactorStore>((set, get) => ({
   project: null,
+  plan: null,
   tree: [],
   totalVueFiles: 0,
   selectedPath: null,
@@ -65,6 +70,30 @@ export const useRefactorStore = create<RefactorStore>((set, get) => ({
   taskLog: [],
   taskProgressByPath: {},
   workbenchRefreshSeq: 0,
+
+  setPlan: async (plan: RefactorPlan) => {
+    if (typeof window.crApi === 'undefined') return;
+    try {
+      const cfgRes = await window.crApi.getConfig();
+      if (!cfgRes.success) return;
+      await window.crApi.setConfig({ ...cfgRes.data, refactorPlan: plan });
+      set({ plan });
+    } catch {
+      /* ignore */
+    }
+  },
+
+  restoreLastProject: async () => {
+    if (typeof window.crApi === 'undefined') return;
+    try {
+      const res = await window.crApi.getLastProject();
+      if (!res.success || !res.data) return;
+      set({ project: res.data, tree: [], selectedPath: null });
+      await get().scan();
+    } catch {
+      /* 静默：恢复失败不影响正常使用 */
+    }
+  },
 
   openProject: async () => {
     if (typeof window.crApi === 'undefined') {

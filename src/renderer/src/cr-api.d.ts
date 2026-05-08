@@ -20,6 +20,7 @@ declare global {
   interface Window {
     crApi: {
       openProject: () => Promise<IPCResponse<ProjectImportResult>>;
+      getLastProject: () => Promise<IPCResponse<ProjectImportResult | null>>;
       scanVueFiles: (req: ReqScanVueFiles) => Promise<IPCResponse<ResScanVueFiles>>;
       startFile: (req: ReqStartRefactor) => Promise<IPCResponse<ResStartRefactor>>;
       getLatestDiff: (req: ReqGetLatestDiff) => Promise<IPCResponse<ResGetLatestDiff>>;

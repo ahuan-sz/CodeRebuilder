@@ -64,15 +64,23 @@ type Props = {
   onSelectPath: (path: string) => void;
 };
 
+/** 只取第一层目录的 key，供默认展开第一层使用 */
+function topLevelDirKeys(nodes: TreeNode[]): string[] {
+  return nodes
+    .filter((n) => n.type === 'dir')
+    .map((n) => n.path || `dir:${n.name}`);
+}
+
 export function RefactorTree({ tree, selectedPath, onSelectPath }: Props): JSX.Element {
   const data = useMemo(() => toDataNodes(tree), [tree]);
+  const defaultExpandedKeys = useMemo(() => topLevelDirKeys(tree), [tree]);
 
   return (
     <div style={{ width: '100%', minWidth: 0 }}>
       <Tree
         showLine
         blockNode
-        defaultExpandAll
+        defaultExpandedKeys={defaultExpandedKeys}
         selectedKeys={selectedPath ? [selectedPath] : []}
         treeData={data}
         onSelect={(keys, info) => {

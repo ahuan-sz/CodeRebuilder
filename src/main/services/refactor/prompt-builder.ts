@@ -9,6 +9,8 @@ import {
   effectiveMigrationSkill,
   getSkillFragments,
 } from '../../../shared/migration-skills.js';
+import { loadConfig } from '../config-manager.js';
+import type { RefactorPlan } from '../../../shared/ipc-types.js';
 
 export type SfcTextBlocks = {
   template: string;
@@ -60,8 +62,43 @@ function mechanicalDraftBlock(draft?: string, label?: string): string {
   return `Mechanical converter draft (${who}) — 粗稿，需按本任务要求改写为 React FC + hooks + CSS Modules：\n\n\`\`\`tsx\n${body}\n\`\`\`\n\n`;
 }
 
+function buildPlanBlock(plan?: RefactorPlan | null): string {
+  if (!plan) return '';
+  const pathLabel: Record<string, string> = {
+    vue2_to_vue3: 'Vue 2 → Vue 3 (Composition API / script setup)',
+    vue2_to_react: 'Vue 2 → React (function components + hooks)',
+    vue3_to_react: 'Vue 3 → React (function components + hooks)',
+  };
+  const styleLabel: Record<string, string> = {
+    'css-modules': 'CSS Modules (.module.css)',
+    tailwind: 'Tailwind CSS (utility classes)',
+    unocss: 'UnoCSS (utility classes)',
+    less: 'Less',
+    sass: 'Sass/SCSS',
+    css: 'plain CSS',
+  };
+  const stateLabel: Record<string, string> = {
+    pinia: 'Pinia',
+    vuex: 'Vuex 4',
+    zustand: 'Zustand',
+    'redux-toolkit': 'Redux Toolkit (RTK)',
+  };
+  return [
+    'Refactor plan (enforced — do NOT deviate):',
+    `  Migration: ${pathLabel[plan.migrationPath] ?? plan.migrationPath}`,
+    `  Language: ${plan.useTypeScript ? 'TypeScript (required — use types/interfaces, avoid "any")' : 'JavaScript (no type annotations)'}`,
+    `  State management: ${stateLabel[plan.stateManagement] ?? plan.stateManagement}`,
+    `  Style solution: ${styleLabel[plan.styleSolution] ?? plan.styleSolution}`,
+    plan.migrationPath === 'vue2_to_vue3'
+      ? '  Output format: Vue 3 SFC (.vue) using <script setup> syntax'
+      : '  Output format: React function component (.tsx / .jsx) + separate CSS file',
+    '',
+  ].join('\n');
+}
+
 function promptPrefix(projectContext?: string, mechanicalDraftText?: string, mechanicalDraftLabel?: string): string {
-  return `${projectContextBlock(projectContext)}${mechanicalDraftBlock(mechanicalDraftText, mechanicalDraftLabel)}`;
+  const plan = loadConfig().refactorPlan ?? null;
+  return `${buildPlanBlock(plan)}${projectContextBlock(projectContext)}${mechanicalDraftBlock(mechanicalDraftText, mechanicalDraftLabel)}`;
 }
 
 /** Step ① template → JSX（仅限 return 内层，由拼装阶段包住） */

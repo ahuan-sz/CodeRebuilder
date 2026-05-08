@@ -2,6 +2,7 @@ import { BrowserWindow, dialog } from 'electron';
 import type { IPCResponse, ProjectImportResult } from '../../../shared/ipc-types.js';
 import { createOrGetProject } from '../../services/project-store.js';
 import { isVueProject } from '../../services/refactor/vue-file-scanner.js';
+import { loadConfig, saveConfig } from '../../services/config-manager.js';
 
 export async function handleOpenProject(
   win: BrowserWindow
@@ -27,6 +28,9 @@ export async function handleOpenProject(
   const root = r.filePaths[0].replace(/[/\\]+$/, '');
   const p = createOrGetProject(root);
   const name = p.display_name ?? root.split(/[/\\]/).pop() ?? 'project';
+
+  saveConfig({ ...loadConfig(), lastOpenedProject: { projectId: p.id, projectRoot: p.root_path, name } });
+
   return {
     success: true,
     data: {

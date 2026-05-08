@@ -56,6 +56,11 @@ function browserStub(): NonNullable<Window['crApi']> {
         '当前为浏览器预览：请关闭此标签，使用终端执行 npm run dev 后出现的 Electron 窗口操作完整功能。'
       ),
 
+    getLastProject: async (): Promise<IPCResponse<ProjectImportResult | null>> => ({
+      success: true,
+      data: null,
+    }),
+
     scanVueFiles: async (_req: ReqScanVueFiles): Promise<IPCResponse<ResScanVueFiles>> =>
       failBrowserPreview('浏览器预览模式不支持扫描项目。'),
 
