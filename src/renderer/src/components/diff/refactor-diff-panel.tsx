@@ -3,7 +3,8 @@ import { Alert, Col, Row, Spin, Tag, Typography } from 'antd';
 import type { RefactorFileStatus } from '../../../../shared/ipc-types';
 import { FILE_STATUS_LABELS, phaseDisplayLabel } from '../../constants/refactor-ui';
 
-const { Text, Paragraph } = Typography;
+const { Paragraph } = Typography;
+const AntText = Typography.Text;
 
 const RUNNING: RefactorFileStatus[] = ['refactoring', 're_refactoring'];
 const PENDING: RefactorFileStatus[] = ['generated_pending', 'regenerated_pending'];
@@ -121,7 +122,7 @@ export function RefactorDiffPanel({
             ) : null}
           </>
         ) : (
-          <Text type="secondary">在左侧目录选择任意 .vue 文件，可在此预览源码与生成结果。</Text>
+          <AntText type="secondary">在左侧目录选择任意 .vue 文件，可在此预览源码与生成结果。</AntText>
         )}
       </div>
     );
@@ -129,11 +130,11 @@ export function RefactorDiffPanel({
     body = (
       <div>
         <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <Text strong>前后对比</Text>
+          <AntText strong>前后对比</AntText>
           {previewVersionNo != null ? <Tag>生成快照 v{previewVersionNo}</Tag> : null}
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <AntText type="secondary" style={{ fontSize: 12 }}>
             左：Vue 源码 · 右：最新成功生成的 TSX
-          </Text>
+          </AntText>
         </div>
         <div style={{ height: 440, minHeight: 440, border: '1px solid #303030' }}>
           <DiffEditor
@@ -155,16 +156,16 @@ export function RefactorDiffPanel({
     body = (
       <div>
         <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <Text strong>代码预览</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <AntText strong>代码预览</AntText>
+          <AntText type="secondary" style={{ fontSize: 12 }}>
             左：当前磁盘上的 Vue · 右：生成物（尚未有成功快照时仅作说明）
-          </Text>
+          </AntText>
         </div>
         <Row gutter={[12, 12]}>
           <Col xs={24} lg={12}>
-            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+            <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
               Vue 源码
-            </Text>
+            </AntText>
             <div style={{ border: '1px solid #303030', borderRadius: 4, overflow: 'hidden' }}>
               <Editor
                 height={400}
@@ -176,9 +177,9 @@ export function RefactorDiffPanel({
             </div>
           </Col>
           <Col xs={24} lg={12}>
-            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+            <AntText type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
               生成预览（TSX）
-            </Text>
+            </AntText>
             <div style={{ border: '1px solid #303030', borderRadius: 4, overflow: 'hidden' }}>
               <Editor
                 height={400}

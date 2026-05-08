@@ -1,8 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   AppConfig,
+  DependencyAnalysisResult,
   IPCResponse,
   ProjectImportResult,
+  ReqAnalyzeProject,
   ReqConfirmVersion,
   ReqGetLatestDiff,
   ReqListVersions,
@@ -24,6 +26,9 @@ const api = {
 
   getLastProject: (): Promise<IPCResponse<ProjectImportResult | null>> =>
     ipcRenderer.invoke('project:get-last'),
+
+  analyzeProject: (req: ReqAnalyzeProject): Promise<IPCResponse<DependencyAnalysisResult>> =>
+    ipcRenderer.invoke('project:analyze-dependencies', req),
 
   scanVueFiles: (req: ReqScanVueFiles): Promise<IPCResponse<ResScanVueFiles>> =>
     ipcRenderer.invoke('refactor:scan-vue-files', req),

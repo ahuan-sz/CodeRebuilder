@@ -21,6 +21,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefactorTree } from './components/project-tree/refactor-tree';
 import { RefactorWorkbench } from './pages/refactor-workbench';
 import { PlanSelector } from './components/plan-selector/plan-selector';
+import { ModeSelector } from './components/mode-selector/mode-selector';
+import { DependencyAnalysis } from './components/dependency-analysis/dependency-analysis';
 import { subscribeRefactorIpc, useRefactorStore } from './stores/refactor-store';
 import type { AppConfig, RefactorPlan } from '../../shared/ipc-types';
 import {
@@ -31,7 +33,8 @@ import {
 } from '../../shared/ai-provider-presets';
 
 const { Header, Sider, Content } = Layout;
-const { Title, Text } = Typography;
+const { Title } = Typography;
+const AntText = Typography.Text;
 
 const HEADER_H = 56;
 
@@ -42,6 +45,12 @@ export default function App(): JSX.Element {
   const restoreLastProject = useRefactorStore((s) => s.restoreLastProject);
   const setPlan = useRefactorStore((s) => s.setPlan);
   const plan = useRefactorStore((s) => s.plan);
+  const project = useRefactorStore((s) => s.project);
+  const projectMode = useRefactorStore((s) => s.projectMode);
+  const setProjectMode = useRefactorStore((s) => s.setProjectMode);
+  const analysisResult = useRefactorStore((s) => s.analysisResult);
+  const analysisLoading = useRefactorStore((s) => s.analysisLoading);
+  const runAnalysis = useRefactorStore((s) => s.runAnalysis);
   const scanLoading = useRefactorStore((s) => s.scanLoading);
 
   const [showPlanSelector, setShowPlanSelector] = useState(false);
@@ -256,7 +265,8 @@ export default function App(): JSX.Element {
       </Header>
 
       <Layout style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {!showPlanSelector && (
+        {/* 文件树仅在重构模式下可见 */}
+        {!showPlanSelector && projectMode === 'refactor' && (
           <Sider theme="dark" width={300} style={{ overflow: 'hidden' }}>
             <div style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden', padding: 12, boxSizing: 'border-box' }}>
               <RefactorTree
@@ -278,22 +288,56 @@ export default function App(): JSX.Element {
             overflow: 'hidden',
           }}
         >
+          {/* 1. 方案选择（未选方案） */}
           {showPlanSelector ? (
             <PlanSelector
               initialPlan={plan ?? undefined}
               onConfirm={(p) => void handlePlanConfirm(p)}
             />
-          ) : (
-            <div
-              style={{
-                flex: 1,
-                minHeight: 0,
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                padding: 24,
+          ) : !project ? (
+            /* 2. 未打开项目 */
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography.Text type="secondary">请点击「打开项目」选择项目目录</Typography.Text>
+            </div>
+          ) : projectMode === 'selector' ? (
+            /* 3. 模式选择 */
+            <ModeSelector
+              projectName={project.name}
+              projectRoot={project.projectRoot}
+              analysisLoading={analysisLoading}
+              hasAnalysisResult={!!analysisResult}
+              onAnalyze={() => {
+                if (analysisResult) { setProjectMode('analysis'); }
+                else { void runAnalysis(); }
               }}
-            >
-              <RefactorWorkbench />
+              onRefactor={() => setProjectMode('refactor')}
+            />
+          ) : projectMode === 'analysis' && analysisResult ? (
+            /* 4. 依赖分析 */
+            <DependencyAnalysis
+              result={analysisResult}
+              projectName={project.name}
+              analysisLoading={analysisLoading}
+              onBack={() => setProjectMode('selector')}
+              onReanalyze={() => void runAnalysis()}
+            />
+          ) : (
+            /* 5. 重构工作台 */
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+              <div style={{ flexShrink: 0, padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<span style={{ marginRight: 4 }}>←</span>}
+                  style={{ color: 'rgba(255,255,255,0.75)' }}
+                  onClick={() => setProjectMode('selector')}
+                >
+                  返回
+                </Button>
+              </div>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: 24 }}>
+                <RefactorWorkbench />
+              </div>
             </div>
           )}
         </Content>
@@ -376,7 +420,7 @@ export default function App(): JSX.Element {
               tooltip="OpenAI、DeepSeek、多数兼容中转服务使用；留空则等价于由上方自动填充或交给 SDK 默认值"
               extra={
                 hasKey ? (
-                  <Text type="success">检测：当前存在可用 API Key（本机存储或环境变量 OPENAI_API_KEY）</Text>
+                  <AntText type="success">检测：当前存在可用 API Key（本机存储或环境变量 OPENAI_API_KEY）</AntText>
                 ) : null
               }
             >
@@ -403,9 +447,9 @@ export default function App(): JSX.Element {
                   autoComplete="new-password"
                 />
               </Form.Item>
-              <Text type="secondary" style={{ display: 'block', marginTop: 6 }}>
+              <AntText type="secondary" style={{ display: 'block', marginTop: 6 }}>
                 保存设置时会一并写入密钥；也可使用下方「迁移助手」等区域后点底部「保存设置」一次性提交。
-              </Text>
+              </AntText>
             </Form.Item>
             <Form.Item label="生成文件扩展名" name={['ai', 'targetExt']}>
               <Select

@@ -1,7 +1,9 @@
 import type {
   AppConfig,
+  DependencyAnalysisResult,
   IPCResponse,
   ProjectImportResult,
+  ReqAnalyzeProject,
   ReqConfirmVersion,
   ReqGetLatestDiff,
   ReqListVersions,
@@ -60,6 +62,9 @@ function browserStub(): NonNullable<Window['crApi']> {
       success: true,
       data: null,
     }),
+
+    analyzeProject: async (_req: ReqAnalyzeProject): Promise<IPCResponse<DependencyAnalysisResult>> =>
+      failBrowserPreview('请在 Electron 窗口内运行依赖分析。'),
 
     scanVueFiles: async (_req: ReqScanVueFiles): Promise<IPCResponse<ResScanVueFiles>> =>
       failBrowserPreview('浏览器预览模式不支持扫描项目。'),

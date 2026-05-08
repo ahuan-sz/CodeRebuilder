@@ -97,6 +97,40 @@ export type TreeNode = {
   children?: TreeNode[];
 };
 
+export type ModuleInfo = {
+  file: string;
+  imports: string[];
+  importedBy: string[];
+  isInCircular: boolean;
+  /** 'core'：被大量文件引用；'leaf'：无人引用；'normal'：其他 */
+  role: 'core' | 'leaf' | 'normal';
+};
+
+export type DependencyAnalysisResult = {
+  modules: ModuleInfo[];
+  circularDependencies: string[][];
+  totalFiles: number;
+  coreThreshold: number;
+  analyzedAt: string;
+  /** 内置轻量扫描器生成的 DOT 格式 */
+  dotFormat: string;
+  /** dependency-cruiser 输出的 DOT 字符串（系统有 graphviz 时转 SVG）*/
+  cruiserDot?: string;
+  /** dependency-cruiser SVG（需要系统 graphviz dot 命令，base64）*/
+  cruiserSvg?: string;
+  /** dependency-cruiser 原始 JSON violations */
+  cruiserViolations?: { rule: string; severity: string; from: string; to: string }[];
+  /** madge 输出的 SVG 字符串（base64）*/
+  madgeSvg?: string;
+  /** madge JS/TS 模块依赖 JSON */
+  madgeJson?: Record<string, string[]>;
+  /** 外部工具运行失败时的错误摘要 */
+  externalToolsError?: string;
+};
+
+export type ReqAnalyzeProject = { projectId: string; projectRoot: string };
+export type ResAnalyzeProject = DependencyAnalysisResult;
+
 export type ReqScanVueFiles = { projectId: string; projectRoot: string };
 export type ResScanVueFiles = {
   tree: TreeNode[];

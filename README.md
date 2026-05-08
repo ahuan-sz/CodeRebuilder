@@ -2,7 +2,7 @@
 
 > AI 驱动的 Vue → React / Vue 3 代码重构桌面助手（Electron + React + TypeScript）
 
-借助大语言模型（LLM），将 Vue 2/3 项目逐文件迁移为 React（TSX）或 Vue 3，提供分步流水线、差异对比、版本历史与人工验收等功能，大幅降低迁移成本与风险。
+借助大语言模型（LLM），将 Vue 2/3 项目逐文件迁移为 React（TSX）或 Vue 3。内置**项目分析**模块，通过 `dependency-cruiser` 与 `madge` 自动生成模块依赖图、识别循环依赖与冗余模块，帮助在重构前厘清项目结构；重构阶段提供分步 AI 流水线、Monaco Diff 对比、版本历史与人工验收，大幅降低迁移成本与风险。
 
 ---
 
@@ -11,6 +11,7 @@
 | 功能 | 说明 |
 |------|------|
 | 项目导入 | 本地目录一键打开，重启自动恢复上次项目 |
+| **项目分析** | dependency-cruiser + madge 生成依赖图，识别循环依赖与冗余模块 |
 | Vue SFC 解析 | `@vue/compiler-sfc` 解析 template / script / style |
 | AI 四步流水线 | template → JSX → script/hooks → style → 拼装成品 |
 | 差异对比 | Monaco Editor 并排展示原始 Vue 与生成 TSX |
@@ -102,6 +103,48 @@ npm run build    # 构建生产包（Electron + Vite）
 
 ---
 
+## 项目分析
+
+打开项目后，点击「**项目分析**」进入依赖分析界面。工具通过 `npx` 自动下载，**无需手动安装**。
+
+### 分析能力
+
+| 工具 | 用途 | 额外依赖 |
+|------|------|----------|
+| 内置扫描器 | 轻量 JS/TS/Vue 依赖扫描，生成 DOT 格式 | 无 |
+| `dependency-cruiser` | 深度依赖分析、规则违规（循环依赖、孤立模块等）、DOT 格式 | 无（npx 自动下载） |
+| `madge` | JS/TS 模块依赖 JSON 图、循环依赖检测 | 无（npx 自动下载） |
+| Graphviz `dot` | 将 DOT 转换为 SVG 可视化图形 | 可选，见下方说明 |
+
+### 输出内容
+
+- **模块列表**：全部模块的依赖数量与被引用次数，按核心/边缘/普通分类
+- **核心模块**：被引用次数超过阈值（总文件数 × 10%，最低 3）的模块，建议优先重构
+- **边缘模块**：无任何模块引用的叶节点，可独立重构，风险低
+- **循环依赖**：完整的循环路径链，重构前应优先拆解
+- **violations**：`dependency-cruiser` 检测到的规则违规清单（循环依赖、孤立文件等）
+- **dependency-cruiser 依赖图**：SVG 可视化 / DOT 格式下载
+- **madge 模块图**：SVG 可视化 / JSON 格式下载
+
+### 安装 Graphviz（生成 SVG 图形）
+
+SVG 图形预览需要系统安装 Graphviz（`dot` 命令）。若未安装，DOT 文件仍可下载，拷贝到 [GraphvizOnline](https://dreampuf.github.io/GraphvizOnline) 在线渲染。
+
+```bash
+# macOS
+brew install graphviz
+
+# Ubuntu / Debian
+sudo apt install graphviz
+
+# Windows（Chocolatey）
+choco install graphviz
+```
+
+安装后**重新点击「开始分析」**即可生成 SVG 图形。
+
+---
+
 ## 项目结构
 
 ```
@@ -109,7 +152,7 @@ src/
 ├── main/                    # Electron 主进程
 │   ├── index.ts             # 入口，创建窗口
 │   ├── ipc/                 # IPC 处理器
-│   │   ├── project/         # 项目打开
+│   │   ├── project/         # 项目打开、恢复上次项目、依赖分析
 │   │   └── refactor/        # 重构相关（扫描/启动/差异/版本）
 │   └── services/
 │       ├── config-manager.ts      # 配置读写 + API Key 安全存储

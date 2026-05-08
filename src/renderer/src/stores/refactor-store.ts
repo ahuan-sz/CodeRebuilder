@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { message } from 'antd';
 import { pushDebugLog } from '../components/debug/debug-panel';
 import type {
+  DependencyAnalysisResult,
   FileStatusUpdatedPayload,
   ProjectImportResult,
   RefactorPlan,
@@ -11,6 +12,8 @@ import type {
 } from '../../../shared/ipc-types';
 import type { RefactorFileStatus } from '../../../shared/ipc-types';
 
+export type ProjectMode = 'selector' | 'analysis' | 'refactor';
+
 export type ProjectState = ProjectImportResult | null;
 
 type TaskProgressEntry = { phase: string; message?: string };
@@ -18,6 +21,9 @@ type TaskProgressEntry = { phase: string; message?: string };
 type RefactorStore = {
   project: ProjectState;
   plan: RefactorPlan | null;
+  projectMode: ProjectMode | null;
+  analysisResult: DependencyAnalysisResult | null;
+  analysisLoading: boolean;
   tree: TreeNode[];
   totalVueFiles: number;
   selectedPath: string | null;
@@ -30,6 +36,8 @@ type RefactorStore = {
   openProject: () => Promise<void>;
   restoreLastProject: () => Promise<void>;
   setPlan: (plan: RefactorPlan) => Promise<void>;
+  setProjectMode: (mode: ProjectMode) => void;
+  runAnalysis: () => Promise<void>;
   scan: () => Promise<void>;
   selectFile: (path: string | null) => void;
   patchTreeStatus: (path: string, status: RefactorFileStatus, checked?: boolean) => void;
@@ -63,6 +71,9 @@ function patchNode(
 export const useRefactorStore = create<RefactorStore>((set, get) => ({
   project: null,
   plan: null,
+  projectMode: null,
+  analysisResult: null,
+  analysisLoading: false,
   tree: [],
   totalVueFiles: 0,
   selectedPath: null,
@@ -70,6 +81,27 @@ export const useRefactorStore = create<RefactorStore>((set, get) => ({
   taskLog: [],
   taskProgressByPath: {},
   workbenchRefreshSeq: 0,
+
+  setProjectMode: (mode: ProjectMode) => set({ projectMode: mode }),
+
+  runAnalysis: async () => {
+    const { project } = get();
+    if (!project || typeof window.crApi === 'undefined') return;
+    set({ analysisLoading: true });
+    try {
+      const res = await window.crApi.analyzeProject({
+        projectId: project.projectId,
+        projectRoot: project.projectRoot,
+      });
+      if (res.success) {
+        set({ analysisResult: res.data, projectMode: 'analysis' });
+      } else {
+        void message.error(`分析失败：${res.error.message}`);
+      }
+    } finally {
+      set({ analysisLoading: false });
+    }
+  },
 
   setPlan: async (plan: RefactorPlan) => {
     if (typeof window.crApi === 'undefined') return;
@@ -88,7 +120,7 @@ export const useRefactorStore = create<RefactorStore>((set, get) => ({
     try {
       const res = await window.crApi.getLastProject();
       if (!res.success || !res.data) return;
-      set({ project: res.data, tree: [], selectedPath: null });
+      set({ project: res.data, tree: [], selectedPath: null, projectMode: 'selector' });
       await get().scan();
     } catch {
       /* 静默：恢复失败不影响正常使用 */
@@ -119,7 +151,7 @@ export const useRefactorStore = create<RefactorStore>((set, get) => ({
         return;
       }
       message.success(`已打开项目：${res.data.name}`);
-      set({ project: res.data, tree: [], selectedPath: null });
+      set({ project: res.data, tree: [], selectedPath: null, projectMode: 'selector', analysisResult: null });
       await get().scan();
     } catch (e) {
       const text = e instanceof Error ? e.message : String(e);

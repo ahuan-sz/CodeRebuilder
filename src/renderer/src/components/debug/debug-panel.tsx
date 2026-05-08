@@ -2,7 +2,8 @@ import { Button, Collapse, Tag, Typography } from 'antd';
 import { BugOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useState } from 'react';
 
-const { Text, Paragraph } = Typography;
+const { Paragraph } = Typography;
+const AntText = Typography.Text;
 
 export type DebugLogEntry = {
   t: string;
@@ -96,18 +97,18 @@ export function DebugPanel(): JSX.Element {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text strong style={{ color: '#fff' }}>
+            <AntText strong style={{ color: '#fff' }}>
               调试
-            </Text>
+            </AntText>
             <Button size="small" onClick={() => setOpen(false)}>
               关闭
             </Button>
           </div>
           <Paragraph style={{ marginBottom: 8 }}>
             <Tag color={crOk ? 'success' : 'error'}>preload / crApi</Tag>
-            <Text type="secondary" style={{ fontSize: 12 }}>
+            <AntText type="secondary" style={{ fontSize: 12 }}>
               {crOk ? '已注入' : '未注入 — 检查 preload 路径与白屏'}
-            </Text>
+            </AntText>
           </Paragraph>
           <Paragraph copyable style={{ fontSize: 11, wordBreak: 'break-all', marginBottom: 8 }}>
             {window.location.href}

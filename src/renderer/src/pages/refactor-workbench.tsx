@@ -27,7 +27,8 @@ import {
 } from '../constants/refactor-ui';
 import { findFileStatusInTree } from '../utils/tree-file-status';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
+const AntText = Typography.Text;
 
 export function RefactorWorkbench(): JSX.Element {
   const project = useRefactorStore((s) => s.project);
@@ -82,9 +83,9 @@ export function RefactorWorkbench(): JSX.Element {
         <Space wrap align="center" size="middle">
           <span style={{ fontWeight: 600 }}>重构工作台</span>
           {!selectedPath ? (
-            <Text type="secondary" style={{ fontSize: 13, fontWeight: 'normal' }}>
+            <AntText type="secondary" style={{ fontSize: 13, fontWeight: 'normal' }}>
               请先在左侧树中选择 .vue 源文件
-            </Text>
+            </AntText>
           ) : (
             <>
               {displayStatus != null ? (
@@ -93,22 +94,22 @@ export function RefactorWorkbench(): JSX.Element {
                 </Tag>
               ) : null}
               {hint ? (
-                <Text type="secondary" style={{ fontSize: 13, fontWeight: 'normal' }}>
+                <AntText type="secondary" style={{ fontSize: 13, fontWeight: 'normal' }}>
                   {hint}
-                </Text>
+                </AntText>
               ) : null}
             </>
           )}
         </Space>
         {selectedPath ? (
-          <Text
+          <AntText
             type="secondary"
             ellipsis
             title={selectedPath}
             style={{ fontSize: 12, fontWeight: 'normal', maxWidth: 'min(100vw - 200px, 720px)' }}
           >
             {selectedPath}
-          </Text>
+          </AntText>
         ) : null}
       </Space>
     );
@@ -220,7 +221,7 @@ export function RefactorWorkbench(): JSX.Element {
   };
 
   if (!project) {
-    return <Text type="secondary">请先打开本地项目目录。</Text>;
+    return <AntText type="secondary">请先打开本地项目目录。</AntText>;
   }
 
   return (
@@ -237,8 +238,8 @@ export function RefactorWorkbench(): JSX.Element {
               <Title level={5} style={{ margin: 0 }}>
                 {project.name}
               </Title>
-              <Text code>{project.projectRoot}</Text>
-              {!project.isVueProject ? <Text type="warning">未检测到 .vue 文件</Text> : null}
+              <AntText code>{project.projectRoot}</AntText>
+              {!project.isVueProject ? <AntText type="warning">未检测到 .vue 文件</AntText> : null}
             </Space>
           </Card>
         </Col>
@@ -274,10 +275,10 @@ export function RefactorWorkbench(): JSX.Element {
         }
       >
         <div style={{ marginBottom: 16, maxWidth: 520 }}>
-          <Text type="secondary" style={{ display: 'block', marginBottom: 6 }}>
+          <AntText type="secondary" style={{ display: 'block', marginBottom: 6 }}>
             迁移技能（内置 Prompt 模板）：.vue 采用分步解析 Template / Script / Style 后拼装；Vuex
             技能用于 .ts/.js store 整文件单轮迁移。
-          </Text>
+          </AntText>
           <Select<MigrationSkillId>
             style={{ width: '100%' }}
             value={migrationSkill}

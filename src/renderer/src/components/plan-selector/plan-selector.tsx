@@ -14,7 +14,8 @@ import {
 import { useState } from 'react';
 import type { MigrationPath, RefactorPlan } from '../../../../shared/ipc-types';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Paragraph } = Typography;
+const AntText = Typography.Text;
 
 function VueLogo({ size = 40 }: { size?: number }): JSX.Element {
   return (
@@ -160,9 +161,9 @@ export function PlanSelector({ initialPlan, onConfirm }: Props): JSX.Element {
           <Title level={2} style={{ marginBottom: 8 }}>
             选择重构方案
           </Title>
-          <Text type="secondary">
+          <AntText type="secondary">
             方案决定了 AI 使用的 Prompt 策略和目标技术栈，选定后可随时在顶部菜单更换
-          </Text>
+          </AntText>
         </div>
 
         {/* 迁移路径卡片 */}
@@ -222,10 +223,10 @@ export function PlanSelector({ initialPlan, onConfirm }: Props): JSX.Element {
                 unCheckedChildren="JS"
               />
               <div>
-                <Text strong>使用 TypeScript</Text>
-                <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                <AntText strong>使用 TypeScript</AntText>
+                <AntText type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
                   {useTypeScript ? '生成 .tsx / .ts 文件，带类型注解' : '生成 .jsx / .js 文件'}
-                </Text>
+                </AntText>
               </div>
             </div>
 
@@ -233,7 +234,7 @@ export function PlanSelector({ initialPlan, onConfirm }: Props): JSX.Element {
 
             {/* 状态管理 */}
             <div>
-              <Text strong style={{ display: 'block', marginBottom: 10 }}>状态管理</Text>
+              <AntText strong style={{ display: 'block', marginBottom: 10 }}>状态管理</AntText>
               <Radio.Group
                 value={stateManagement}
                 onChange={(e) => setStateManagement(e.target.value as string)}
@@ -250,7 +251,7 @@ export function PlanSelector({ initialPlan, onConfirm }: Props): JSX.Element {
 
             {/* 样式方案 */}
             <div>
-              <Text strong style={{ display: 'block', marginBottom: 10 }}>样式方案</Text>
+              <AntText strong style={{ display: 'block', marginBottom: 10 }}>样式方案</AntText>
               <Radio.Group
                 value={styleSolution}
                 onChange={(e) => setStyleSolution(e.target.value as string)}

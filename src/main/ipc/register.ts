@@ -7,6 +7,7 @@ import { handleGetLatestDiff } from './refactor/get-latest-diff.js';
 import { handleConfirmVersion } from './refactor/confirm-version.js';
 import { handleListVersions } from './refactor/list-versions.js';
 import { handleOpenProject } from './project/open-project.js';
+import { handleAnalyzeProject } from './project/analyze-dependencies.js';
 import { loadConfig, saveConfig, loadOpenAiKey, saveOpenAiKey, clearStoredOpenAiKey } from '../services/config-manager.js';
 import { getProjectById } from '../services/project-store.js';
 import { isVueProject } from '../services/refactor/vue-file-scanner.js';
@@ -25,6 +26,7 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
     return handleOpenProject(win);
   });
 
+  ipcMain.handle('project:analyze-dependencies', handleAnalyzeProject);
   ipcMain.handle('refactor:scan-vue-files', handleScanVueFiles);
   ipcMain.handle('refactor:start-file', handleStartFile);
   ipcMain.handle('refactor:get-latest-diff', handleGetLatestDiff);

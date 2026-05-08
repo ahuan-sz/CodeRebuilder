@@ -1,7 +1,9 @@
 import type {
   AppConfig,
+  DependencyAnalysisResult,
   IPCResponse,
   ProjectImportResult,
+  ReqAnalyzeProject,
   ReqConfirmVersion,
   ReqGetLatestDiff,
   ReqListVersions,
@@ -21,6 +23,7 @@ declare global {
     crApi: {
       openProject: () => Promise<IPCResponse<ProjectImportResult>>;
       getLastProject: () => Promise<IPCResponse<ProjectImportResult | null>>;
+      analyzeProject: (req: ReqAnalyzeProject) => Promise<IPCResponse<DependencyAnalysisResult>>;
       scanVueFiles: (req: ReqScanVueFiles) => Promise<IPCResponse<ResScanVueFiles>>;
       startFile: (req: ReqStartRefactor) => Promise<IPCResponse<ResStartRefactor>>;
       getLatestDiff: (req: ReqGetLatestDiff) => Promise<IPCResponse<ResGetLatestDiff>>;
